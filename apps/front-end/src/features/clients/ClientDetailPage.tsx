@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { formatCurrency } from '../../shared/lib/format';
 import { useClient } from './api';
@@ -13,7 +14,8 @@ export function ClientDetailPage() {
   return (
     <section className="client-detail">
       <Link to="/clients" className="back-link">
-        ← Voltar para clientes
+        <ArrowLeft size={16} />
+        Voltar para clientes
       </Link>
       <div className="detail-card">
         <h1>{client.name}</h1>

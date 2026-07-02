@@ -103,12 +103,12 @@ Para subir só o banco: `docker compose up postgres`.
 | Método | Rota | Auth | Descrição |
 |--------|------|------|-----------|
 | POST | `/auth/login` | — | Autentica (e-mail/senha) e retorna JWT |
-| POST | `/clients` | ✅ | Cria cliente |
-| GET | `/clients` | ✅ | Lista paginada (`page`, `limit`, `search`) |
-| GET | `/clients/stats` | ✅ | Totais, últimos e série do gráfico |
-| GET | `/clients/:id` | ✅ | Detalhe + incrementa contador de acessos |
-| PUT | `/clients/:id` | ✅ | Atualiza cliente |
-| DELETE | `/clients/:id` | ✅ | Soft delete |
+| POST | `/clients` | Sim | Cria cliente |
+| GET | `/clients` | Sim | Lista paginada (`page`, `limit`, `search`) |
+| GET | `/clients/stats` | Sim | Totais, últimos e série do gráfico |
+| GET | `/clients/:id` | Sim | Detalhe + incrementa contador de acessos |
+| PUT | `/clients/:id` | Sim | Atualiza cliente |
+| DELETE | `/clients/:id` | Sim | Soft delete |
 | GET | `/healthz` | — | Healthcheck (verifica o banco) |
 | GET | `/metrics` | — | Métricas Prometheus |
 | GET | `/docs` | — | Swagger UI |

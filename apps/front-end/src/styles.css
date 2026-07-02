@@ -416,7 +416,9 @@ select:focus {
 .back-link {
   color: var(--orange);
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   margin-bottom: 1rem;
 }
 .detail-card {
