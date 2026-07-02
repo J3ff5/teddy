@@ -37,7 +37,7 @@ Local (dev):
 
 ```bash
 cp .env.example .env         # VITE_API_URL aponta para a API
-npx nx serve front-end       # http://localhost:4200
+npx nx serve front-end       # http://localhost:5173
 ```
 
 ## Estado

@@ -93,7 +93,7 @@ As migrations rodam sozinhas na subida da API (`migrationsRun: true`).
 npm ci
 cp apps/back-end/.env.example apps/back-end/.env   # ajuste DATABASE_URL
 npx nx serve back-end     # API em :3000
-npx nx serve front-end    # SPA em :4200 (Vite dev) — ajuste VITE_API_URL se preciso
+npx nx serve front-end    # SPA em :5173 (Vite dev) — ajuste VITE_API_URL se preciso
 ```
 
 Para subir só o banco: `docker compose up postgres`.
