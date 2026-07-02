@@ -224,16 +224,21 @@ select:focus {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
+  color: var(--muted);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
 }
 .icon-btn:hover {
   background: var(--gray-bg);
+  color: var(--text);
 }
 .icon-btn.selected {
   color: var(--orange);
-  font-weight: 800;
+}
+.icon-btn.danger:hover {
+  color: var(--danger);
 }
 .create-btn {
   margin-top: 1.25rem;

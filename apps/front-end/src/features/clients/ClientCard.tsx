@@ -1,3 +1,4 @@
+import { Minus, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../../shared/lib/format';
 import { useSelectedStore } from '../selected/store';
@@ -39,7 +40,7 @@ export function ClientCard({ client, onEdit, onDelete, selectionMode }: Props) {
           className={isSelected ? 'icon-btn selected' : 'icon-btn'}
           onClick={() => toggle(client)}
         >
-          {isSelected ? '−' : '+'}
+          {isSelected ? <Minus size={18} /> : <Plus size={18} />}
         </button>
         {onEdit && (
           <button
@@ -48,7 +49,7 @@ export function ClientCard({ client, onEdit, onDelete, selectionMode }: Props) {
             className="icon-btn"
             onClick={() => onEdit(client)}
           >
-            <span aria-hidden="true">✏️</span>
+            <Pencil size={18} />
           </button>
         )}
         {onDelete && (
@@ -58,7 +59,7 @@ export function ClientCard({ client, onEdit, onDelete, selectionMode }: Props) {
             className="icon-btn danger"
             onClick={() => onDelete(client)}
           >
-            <span aria-hidden="true">🗑️</span>
+            <Trash2 size={18} />
           </button>
         )}
       </div>
