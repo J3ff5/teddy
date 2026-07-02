@@ -18,7 +18,10 @@ module.exports = {
       assets: ['./src/assets'],
       optimization: false,
       outputHashing: 'none',
-      generatePackageJson: false,
+      // Externalize runtime deps (emit a dist/package.json) instead of bundling
+      // them. Native modules (bcrypt) and dynamic-require ones (typeorm,
+      // OpenTelemetry auto-instrumentations) don't survive webpack bundling.
+      generatePackageJson: true,
       sourceMap: true,
     }),
   ],
