@@ -55,3 +55,4 @@ vitest.config.*.timestamp*
 # local env files
 .env
 .env.local
+.claude/
