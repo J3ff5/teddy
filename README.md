@@ -1,109 +1,147 @@
-# New Nx Repository
+# Teddy — Sistema de Clientes
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+MVP full-stack de gestão de clientes (login, CRUD com soft delete, dashboard,
+contador de acessos, auditoria e observabilidade), entregue como **monorepo Nx**
+com dois aplicativos independentes.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+> Desafio Técnico — Tech Lead Pleno | Teddy Open Finance.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/docs/technologies/typescript/introduction?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
-## Finish your Nx platform setup
+## Stack
 
-🚀 [Finish setting up your workspace](https://cloud.nx.app/connect/8s3HZiBBlo) to get faster builds with remote caching, distributed task execution, and self-healing CI. [Learn more about Nx Cloud](https://nx.dev/ci/intro/why-nx-cloud).
-## Generate a library
+| Camada | Tecnologias |
+|--------|-------------|
+| Front-end | React 19 + Vite + TypeScript, React Router, TanStack Query, Zustand, React Hook Form + Zod, Recharts |
+| Back-end | NestJS 11 + TypeORM + PostgreSQL, JWT (passport), class-validator, Swagger |
+| Observabilidade | `/healthz` (Terminus), `/metrics` (Prometheus), logs JSON (pino), traces (OpenTelemetry) |
+| Infra | Docker + docker-compose, Nx, GitHub Actions |
 
-```sh
-npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
-```
-
-## Run tasks
-
-To build the library use:
-
-```sh
-npx nx run pkg1:build
-```
-
-To run any task with Nx use:
-
-```sh
-npx nx run <project-name>:<target>
-```
-
-These targets are either [inferred automatically](https://nx.dev/docs/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
-
-[More about running tasks in the docs &raquo;](https://nx.dev/docs/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Versioning and releasing
-
-To version and release the library use
+## Estrutura do monorepo
 
 ```
-npx nx release
+teddy/
+├── apps/
+│   ├── back-end/        # API NestJS (auth, clients, health, metrics, observability)
+│   │   ├── Dockerfile
+│   │   ├── docker-compose.yml
+│   │   ├── .env.example
+│   │   └── README.md
+│   └── front-end/       # SPA React + Vite
+│       ├── Dockerfile
+│       ├── docker-compose.yml
+│       ├── .env.example
+│       └── README.md
+├── .github/workflows/   # CI separado FE/BE
+├── docker-compose.yml   # sobe tudo (postgres + api + web)
+└── docs/                # diagramas de arquitetura
 ```
 
-Pass `--dry-run` to see what would happen without actually releasing the library.
+## Arquitetura (visão local)
 
-[Learn more about Nx release &raquo;](https://nx.dev/docs/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Keep TypeScript project references up to date
-
-Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
-
-To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
-
-```sh
-npx nx sync
+```mermaid
+flowchart LR
+  Browser["Browser<br/>localhost:5173"] -->|HTTP + JWT| API["NestJS API<br/>localhost:3000"]
+  API -->|TypeORM| PG[("PostgreSQL<br/>5432")]
+  API -.->|/metrics| Prom["Prometheus<br/>(scrape)"]
+  API -.->|OTLP traces| Otel["OTel Collector<br/>(opcional)"]
 ```
 
-You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
+## Arquitetura (proposta AWS)
 
-```sh
-npx nx sync:check
+```mermaid
+flowchart LR
+  User(("Usuário")) --> CF["CloudFront + S3<br/>(SPA React)"]
+  User --> ALB["Application Load Balancer"]
+  ALB --> ECS["ECS Fargate<br/>API NestJS (N tarefas)"]
+  ECS --> RDS[("RDS PostgreSQL<br/>Multi-AZ")]
+  ECS --> EC["ElastiCache Redis<br/>(cache/sessão, opcional)"]
+  ECS --> CW["CloudWatch Logs<br/>+ X-Ray (traces)"]
+  ECS -.->|/metrics| AMP["Amazon Managed<br/>Prometheus"]
+  subgraph VPC["VPC privada"]
+    ECS
+    RDS
+    EC
+  end
 ```
 
-[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+O front (estático) vai para **S3 + CloudFront** (CDN global, cache de borda). A
+API roda em **ECS Fargate** atrás de um **ALB**, escalando horizontalmente por
+CPU/memória/requisições. Estado fica no **RDS Postgres Multi-AZ** (failover
+automático) e num **ElastiCache Redis** opcional para cache/contadores. Logs,
+métricas e traces vão para **CloudWatch / Managed Prometheus / X-Ray**.
+Secrets (JWT, DB) no **Secrets Manager**.
 
-## Nx Cloud
+## Como rodar
 
-Nx Cloud ensures a [fast and scalable CI](https://nx.dev/nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+### Docker (tudo de uma vez)
 
-- [Remote caching](https://nx.dev/docs/features/ci-features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/docs/features/ci-features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/docs/features/ci-features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/docs/features/ci-features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Set up CI (non-Github Actions CI)
-
-**Note:** This is only required if your CI provider is not GitHub Actions.
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
+```bash
+docker compose up --build
 ```
 
-[Learn more about Nx on CI](https://nx.dev/docs/features/ci-features?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- Front: http://localhost:5173
+- API: http://localhost:3000 · Swagger: http://localhost:3000/docs
+- Postgres: localhost:5432
 
-## Install Nx Console
+O usuário admin é criado automaticamente no primeiro boot:
+`admin@teddy.com` / `admin123` (configurável via `ADMIN_EMAIL` / `ADMIN_PASSWORD`).
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+As migrations rodam sozinhas na subida da API (`migrationsRun: true`).
 
-[Install Nx Console &raquo;](https://nx.dev/docs/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Local (desenvolvimento)
 
-## 🔗 Learn More
+```bash
+npm ci
+cp apps/back-end/.env.example apps/back-end/.env   # ajuste DATABASE_URL
+npx nx serve back-end     # API em :3000
+npx nx serve front-end    # SPA em :4200 (Vite dev) — ajuste VITE_API_URL se preciso
+```
 
-- [Nx Documentation](https://nx.dev/docs)
-- [Crafting Your Workspace Tutorial](https://nx.dev/docs/getting-started/tutorials/crafting-your-workspace)
-- [Module Boundaries](https://nx.dev/docs/features/enforce-module-boundaries)
-- [Releasing Packages](https://nx.dev/docs/features/manage-releases)
-- [Nx Plugins](https://nx.dev/docs/concepts/nx-plugins)
-- [Nx Cloud](https://nx.dev/nx-cloud)
+Para subir só o banco: `docker compose up postgres`.
 
-## 💬 Community
+## Endpoints principais
 
-Join the Nx community:
+| Método | Rota | Auth | Descrição |
+|--------|------|------|-----------|
+| POST | `/auth/login` | — | Autentica (e-mail/senha) e retorna JWT |
+| POST | `/clients` | ✅ | Cria cliente |
+| GET | `/clients` | ✅ | Lista paginada (`page`, `limit`, `search`) |
+| GET | `/clients/stats` | ✅ | Totais, últimos e série do gráfico |
+| GET | `/clients/:id` | ✅ | Detalhe + incrementa contador de acessos |
+| PUT | `/clients/:id` | ✅ | Atualiza cliente |
+| DELETE | `/clients/:id` | ✅ | Soft delete |
+| GET | `/healthz` | — | Healthcheck (verifica o banco) |
+| GET | `/metrics` | — | Métricas Prometheus |
+| GET | `/docs` | — | Swagger UI |
 
-- [Discord](https://go.nx.dev/community)
-- [X (Twitter)](https://twitter.com/nxdevtools)
-- [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [YouTube](https://www.youtube.com/@nxdevtools)
-- [Blog](https://nx.dev/blog)
+## Observabilidade — por que importa
+
+- **Logs estruturados (JSON)**: legíveis por máquina (CloudWatch, Loki, ELK),
+  permitem busca/alerta por campo e correlação por request-id. Texto livre não escala.
+- **`/healthz`**: o orquestrador (ECS/K8s) só roteia tráfego para instâncias
+  saudáveis e reinicia as que falham — base para deploys sem downtime.
+- **`/metrics` (Prometheus)**: séries temporais (latência, throughput, erros,
+  `client_views_total`) habilitam dashboards e alertas proativos antes do usuário sentir.
+- **Traces (OpenTelemetry)**: seguem uma requisição por todas as camadas,
+  localizando o gargalo exato em sistemas distribuídos. Habilite com `OTEL_ENABLED=true`.
+
+## Escalabilidade
+
+- **Stateless**: a API não guarda sessão em memória (JWT), então escala
+  horizontalmente — basta adicionar tarefas atrás do load balancer.
+- **Banco**: RDS Multi-AZ para HA; read replicas e connection pooling quando o
+  volume crescer. Índices e paginação já no MVP evitam full scans.
+- **Cache**: Redis (ElastiCache) para respostas quentes e contadores de acesso
+  sob alta carga (hoje o contador é uma coluna atômica no Postgres).
+- **Front**: assets estáticos servidos por CDN (CloudFront), custo e latência baixos.
+- **Nx**: build/test por projeto e `affected` no CI evitam reprocessar o que não mudou.
+
+## Testes & qualidade
+
+```bash
+npx nx run-many -t test     # unitários FE + BE
+npx nx run-many -t lint     # ESLint
+npx nx run-many -t build    # builds de produção
+```
+
+ESLint + Prettier, commits semânticos (commitlint + husky) e CI no GitHub Actions
+com pipelines separados para front-end e back-end.

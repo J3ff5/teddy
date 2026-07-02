@@ -1,0 +1,29 @@
+name: Back-end CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/back-end/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'apps/back-end/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint, test and build the API
+        run: npx nx run-many -t lint test build --projects=back-end

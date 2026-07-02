@@ -1,0 +1,29 @@
+name: Front-end CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/front-end/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/frontend.yml'
+  pull_request:
+    paths:
+      - 'apps/front-end/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/frontend.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint, test and build the SPA
+        run: npx nx run-many -t lint test build --projects=front-end
