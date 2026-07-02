@@ -1,0 +1,12 @@
+# Front-end only (nginx). Expects the API reachable at VITE_API_URL.
+# Build context is the repo root (../..).
+# Usage (from apps/front-end): docker compose up --build
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/front-end/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000
+    ports:
+      - '5173:80'

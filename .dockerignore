@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+dist
+**/dist
+.nx
+.git
+.github
+.husky
+**/*.log
+**/.env
+**/.env.local
+test-output
+coverage
