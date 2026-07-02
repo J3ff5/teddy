@@ -142,11 +142,16 @@ select:focus {
 }
 .topnav {
   display: flex;
+  align-items: center;
   gap: 1.5rem;
   flex: 1;
 }
+.navitem,
 .topnav a,
 .topnav .linklike {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--text);
   text-decoration: none;
   font-weight: 500;
@@ -154,9 +159,112 @@ select:focus {
 .topnav a.active {
   color: var(--orange);
   border-bottom: 2px solid var(--orange);
+  padding-bottom: 2px;
+}
+/* Desktop nav is text-only; icons appear in the mobile drawer. */
+.topnav svg {
+  display: none;
 }
 .greeting {
   color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Hamburger — hidden on desktop, shown on mobile. */
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  padding: 0.25rem;
+}
+
+/* --- Mobile drawer --- */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 200;
+}
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 280px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+  animation: drawer-in 0.2s ease-out;
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  background: var(--gray-bg);
+  border-bottom: 1px solid var(--gray-line);
+}
+.drawer-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  display: inline-flex;
+}
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+}
+.drawer-nav a,
+.drawer-nav .navitem {
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+.drawer-nav a:hover,
+.drawer-nav .navitem:hover {
+  background: var(--gray-bg);
+}
+.drawer-nav a.active {
+  color: var(--orange);
+  border: none;
+}
+.drawer-nav svg {
+  display: inline;
+}
+.drawer-greeting {
+  margin-top: auto;
+  padding: 1rem 1.5rem;
+  color: var(--muted);
+  border-top: 1px solid var(--gray-line);
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+  .hamburger {
+    display: inline-flex;
+  }
+  .topnav,
+  .topbar > .greeting {
+    display: none;
+  }
 }
 .content {
   max-width: 1120px;
