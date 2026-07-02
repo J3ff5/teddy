@@ -37,7 +37,7 @@ export class ClientsService {
     };
   }
 
-  /** Detalhe do cliente — incrementa o contador de acessos de forma atômica. */
+  /** Detalhe do cliente. Incrementa o contador de acessos de forma atômica. */
   async findOne(id: string): Promise<Client> {
     const client = await this.getOrFail(id);
     await this.repo.increment({ id }, 'viewCount', 1);

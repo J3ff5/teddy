@@ -17,7 +17,7 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Teddy API')
-    .setDescription('API de gestão de clientes — Desafio Teddy Open Finance')
+    .setDescription('API de gestão de clientes do desafio Teddy Open Finance')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

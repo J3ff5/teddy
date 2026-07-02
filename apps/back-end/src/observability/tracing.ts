@@ -1,7 +1,7 @@
 /**
  * OpenTelemetry tracing bootstrap (differential). Imported first in main.ts so
  * instrumentation is registered before any other module loads. Disabled by
- * default — set OTEL_ENABLED=true and point OTEL_EXPORTER_OTLP_ENDPOINT at a
+ * default. Set OTEL_ENABLED=true and point OTEL_EXPORTER_OTLP_ENDPOINT at a
  * collector (e.g. http://otel-collector:4318/v1/traces) to emit spans.
  */
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';

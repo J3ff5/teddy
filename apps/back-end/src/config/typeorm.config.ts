@@ -8,7 +8,7 @@ import { InitSchema1720000000000 } from '../migrations/1720000000000-InitSchema'
  * (TypeOrmModule.forRootAsync) and the TypeORM CLI (data-source.ts).
  *
  * Entities and migrations are imported explicitly (not via glob) so the config
- * survives webpack bundling — globbed paths break once everything is bundled
+ * survives webpack bundling. Globbed paths break once everything is bundled
  * into a single dist file.
  */
 export function buildDataSourceOptions(): DataSourceOptions {

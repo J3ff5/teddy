@@ -1,10 +1,10 @@
-# Teddy — Sistema de Clientes
+# Teddy: Sistema de Clientes
 
-MVP full-stack de gestão de clientes (login, CRUD com soft delete, dashboard,
-contador de acessos, auditoria e observabilidade), entregue como **monorepo Nx**
-com dois aplicativos independentes.
+Sistema de gestão de clientes com login, CRUD (com soft delete), dashboard,
+contador de acessos e auditoria. É um monorepo Nx com dois apps independentes:
+a API em NestJS e o front em React.
 
-> Desafio Técnico — Tech Lead Pleno | Teddy Open Finance.
+Desafio técnico de Tech Lead Pleno da Teddy Open Finance.
 
 ## Stack
 
@@ -35,17 +35,17 @@ teddy/
 └── docs/                # diagramas de arquitetura
 ```
 
-## Arquitetura (visão local)
+## Arquitetura local
 
 ```mermaid
 flowchart LR
   Browser["Browser<br/>localhost:5173"] -->|HTTP + JWT| API["NestJS API<br/>localhost:3000"]
   API -->|TypeORM| PG[("PostgreSQL<br/>5432")]
-  API -.->|/metrics| Prom["Prometheus<br/>(scrape)"]
-  API -.->|OTLP traces| Otel["OTel Collector<br/>(opcional)"]
+  API -.->|/metrics| Prom["Prometheus (scrape)"]
+  API -.->|OTLP traces| Otel["OTel Collector"]
 ```
 
-## Arquitetura (proposta AWS)
+## Arquitetura na AWS
 
 ```mermaid
 flowchart LR
@@ -53,9 +53,9 @@ flowchart LR
   User --> ALB["Application Load Balancer"]
   ALB --> ECS["ECS Fargate<br/>API NestJS (N tarefas)"]
   ECS --> RDS[("RDS PostgreSQL<br/>Multi-AZ")]
-  ECS --> EC["ElastiCache Redis<br/>(cache/sessão, opcional)"]
-  ECS --> CW["CloudWatch Logs<br/>+ X-Ray (traces)"]
-  ECS -.->|/metrics| AMP["Amazon Managed<br/>Prometheus"]
+  ECS --> EC["ElastiCache Redis"]
+  ECS --> CW["CloudWatch + X-Ray"]
+  ECS -.->|/metrics| AMP["Amazon Managed Prometheus"]
   subgraph VPC["VPC privada"]
     ECS
     RDS
@@ -63,79 +63,82 @@ flowchart LR
   end
 ```
 
-O front (estático) vai para **S3 + CloudFront** (CDN global, cache de borda). A
-API roda em **ECS Fargate** atrás de um **ALB**, escalando horizontalmente por
-CPU/memória/requisições. Estado fica no **RDS Postgres Multi-AZ** (failover
-automático) e num **ElastiCache Redis** opcional para cache/contadores. Logs,
-métricas e traces vão para **CloudWatch / Managed Prometheus / X-Ray**.
-Secrets (JWT, DB) no **Secrets Manager**.
+O front é estático, então vai para o S3 servido pelo CloudFront. A API roda no
+ECS Fargate atrás de um load balancer e escala adicionando tarefas conforme a
+carga. Os dados ficam no RDS Postgres em Multi-AZ (failover automático) e o
+Redis do ElastiCache entra quando precisar de cache ou contadores mais rápidos.
+Logs, métricas e traces vão para CloudWatch, Managed Prometheus e X-Ray. Os
+segredos (JWT, banco) ficam no Secrets Manager.
 
 ## Como rodar
 
-### Docker (tudo de uma vez)
+### Com Docker
 
 ```bash
 docker compose up --build
 ```
 
 - Front: http://localhost:5173
-- API: http://localhost:3000 · Swagger: http://localhost:3000/docs
+- API: http://localhost:3000, Swagger em http://localhost:3000/docs
 - Postgres: localhost:5432
 
-O usuário admin é criado automaticamente no primeiro boot:
-`admin@teddy.com` / `admin123` (configurável via `ADMIN_EMAIL` / `ADMIN_PASSWORD`).
+O usuário admin é criado no primeiro boot: `admin@teddy.com` / `admin123`. Dá
+para mudar em `ADMIN_EMAIL` e `ADMIN_PASSWORD`. As migrations rodam sozinhas
+quando a API sobe.
 
-As migrations rodam sozinhas na subida da API (`migrationsRun: true`).
-
-### Local (desenvolvimento)
+### Local
 
 ```bash
 npm ci
 cp apps/back-end/.env.example apps/back-end/.env   # ajuste DATABASE_URL
 npx nx serve back-end     # API em :3000
-npx nx serve front-end    # SPA em :5173 (Vite dev) — ajuste VITE_API_URL se preciso
+npx nx serve front-end    # SPA em :5173
 ```
 
-Para subir só o banco: `docker compose up postgres`.
+Se quiser só o banco: `docker compose up postgres`.
 
-## Endpoints principais
+## Endpoints
 
 | Método | Rota | Auth | Descrição |
 |--------|------|------|-----------|
-| POST | `/auth/login` | — | Autentica (e-mail/senha) e retorna JWT |
-| POST | `/clients` | Sim | Cria cliente |
-| GET | `/clients` | Sim | Lista paginada (`page`, `limit`, `search`) |
-| GET | `/clients/stats` | Sim | Totais, últimos e série do gráfico |
-| GET | `/clients/:id` | Sim | Detalhe + incrementa contador de acessos |
-| PUT | `/clients/:id` | Sim | Atualiza cliente |
-| DELETE | `/clients/:id` | Sim | Soft delete |
-| GET | `/healthz` | — | Healthcheck (verifica o banco) |
-| GET | `/metrics` | — | Métricas Prometheus |
-| GET | `/docs` | — | Swagger UI |
+| POST | `/auth/login` | não | Autentica por e-mail/senha e retorna o JWT |
+| POST | `/clients` | sim | Cria cliente |
+| GET | `/clients` | sim | Lista paginada (`page`, `limit`, `search`) |
+| GET | `/clients/stats` | sim | Totais, últimos clientes e série do gráfico |
+| GET | `/clients/:id` | sim | Detalhe e incremento do contador de acessos |
+| PUT | `/clients/:id` | sim | Atualiza cliente |
+| DELETE | `/clients/:id` | sim | Soft delete |
+| GET | `/healthz` | não | Healthcheck (verifica o banco) |
+| GET | `/metrics` | não | Métricas Prometheus |
+| GET | `/docs` | não | Swagger UI |
 
-## Observabilidade — por que importa
+## Observabilidade
 
-- **Logs estruturados (JSON)**: legíveis por máquina (CloudWatch, Loki, ELK),
-  permitem busca/alerta por campo e correlação por request-id. Texto livre não escala.
-- **`/healthz`**: o orquestrador (ECS/K8s) só roteia tráfego para instâncias
-  saudáveis e reinicia as que falham — base para deploys sem downtime.
-- **`/metrics` (Prometheus)**: séries temporais (latência, throughput, erros,
-  `client_views_total`) habilitam dashboards e alertas proativos antes do usuário sentir.
-- **Traces (OpenTelemetry)**: seguem uma requisição por todas as camadas,
-  localizando o gargalo exato em sistemas distribuídos. Habilite com `OTEL_ENABLED=true`.
+Por que cada peça está aqui:
+
+- Logs em JSON são lidos por máquina. Ferramentas como CloudWatch, Loki ou ELK
+  conseguem buscar e alertar por campo, e a gente correlaciona por request-id.
+- O `/healthz` deixa o orquestrador (ECS, Kubernetes) mandar tráfego só para as
+  instâncias saudáveis e reiniciar as que caíram.
+- O `/metrics` expõe séries temporais (latência, throughput, erros,
+  `client_views_total`) para dashboards e alertas.
+- Os traces do OpenTelemetry seguem uma requisição por todas as camadas e
+  mostram onde está o gargalo. Ligue com `OTEL_ENABLED=true`.
 
 ## Escalabilidade
 
-- **Stateless**: a API não guarda sessão em memória (JWT), então escala
-  horizontalmente — basta adicionar tarefas atrás do load balancer.
-- **Banco**: RDS Multi-AZ para HA; read replicas e connection pooling quando o
-  volume crescer. Índices e paginação já no MVP evitam full scans.
-- **Cache**: Redis (ElastiCache) para respostas quentes e contadores de acesso
-  sob alta carga (hoje o contador é uma coluna atômica no Postgres).
-- **Front**: assets estáticos servidos por CDN (CloudFront), custo e latência baixos.
-- **Nx**: build/test por projeto e `affected` no CI evitam reprocessar o que não mudou.
+- A API é stateless (usa JWT), então escala na horizontal: é só subir mais
+  tarefas atrás do load balancer.
+- No banco, o RDS Multi-AZ dá alta disponibilidade. Read replicas e pool de
+  conexões entram quando o volume crescer. Paginação e índices já evitam full
+  scan desde o MVP.
+- O Redis serve de cache e ajuda nos contadores sob carga alta. Hoje o contador
+  de acessos é uma coluna atômica no Postgres, o que já resolve para o MVP.
+- O front é estático e sai pela CDN, com custo e latência baixos.
+- No CI, o Nx roda build e teste por projeto e usa `affected` para não
+  reprocessar o que não mudou.
 
-## Testes & qualidade
+## Testes e qualidade
 
 ```bash
 npx nx run-many -t test     # unitários FE + BE
@@ -143,5 +146,5 @@ npx nx run-many -t lint     # ESLint
 npx nx run-many -t build    # builds de produção
 ```
 
-ESLint + Prettier, commits semânticos (commitlint + husky) e CI no GitHub Actions
-com pipelines separados para front-end e back-end.
+ESLint e Prettier, commits semânticos (commitlint + husky) e CI no GitHub
+Actions com pipelines separados para front e back.

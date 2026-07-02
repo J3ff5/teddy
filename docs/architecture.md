@@ -1,7 +1,7 @@
 # Arquitetura
 
-Diagramas renderizados nativamente pelo GitHub (Mermaid). Fontes reutilizáveis
-para exportar como imagem, se necessário.
+Os diagramas abaixo são em Mermaid e o GitHub renderiza direto na página. Dá
+para exportar como imagem se precisar.
 
 ## Local
 
@@ -10,10 +10,10 @@ flowchart LR
   Browser["Browser<br/>localhost:5173"] -->|HTTP + JWT| API["NestJS API<br/>localhost:3000"]
   API -->|TypeORM| PG[("PostgreSQL<br/>5432")]
   API -.->|/metrics| Prom["Prometheus (scrape)"]
-  API -.->|OTLP traces| Otel["OTel Collector (opcional)"]
+  API -.->|OTLP traces| Otel["OTel Collector"]
 ```
 
-## Proposta AWS
+## AWS
 
 ```mermaid
 flowchart LR
@@ -21,7 +21,7 @@ flowchart LR
   User --> ALB["Application Load Balancer"]
   ALB --> ECS["ECS Fargate<br/>API NestJS (N tarefas)"]
   ECS --> RDS[("RDS PostgreSQL<br/>Multi-AZ")]
-  ECS --> EC["ElastiCache Redis<br/>(opcional)"]
+  ECS --> EC["ElastiCache Redis"]
   ECS --> CW["CloudWatch + X-Ray"]
   ECS -.->|/metrics| AMP["Amazon Managed Prometheus"]
   subgraph VPC["VPC privada"]
@@ -31,7 +31,7 @@ flowchart LR
   end
 ```
 
-## Fluxo de autenticação
+## Autenticação
 
 ```mermaid
 sequenceDiagram
@@ -40,10 +40,10 @@ sequenceDiagram
   participant DB as Postgres
   U->>A: POST /auth/login (email, senha)
   A->>DB: busca usuário
-  A->>A: bcrypt.compare + assina JWT
+  A->>A: bcrypt.compare e assina o JWT
   A-->>U: { accessToken, user }
   U->>A: GET /clients (Authorization: Bearer)
-  A->>A: JwtAuthGuard valida token
-  A->>DB: SELECT clients (paginado, sem soft-deleted)
+  A->>A: JwtAuthGuard valida o token
+  A->>DB: SELECT clients (paginado, sem os soft-deleted)
   A-->>U: { data, total, page, ... }
 ```

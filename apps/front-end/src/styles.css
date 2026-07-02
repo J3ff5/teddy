@@ -170,7 +170,7 @@ select:focus {
   white-space: nowrap;
 }
 
-/* Hamburger — hidden on desktop, shown on mobile. */
+/* Hamburger, hidden on desktop and shown on mobile. */
 .hamburger {
   display: none;
   background: none;

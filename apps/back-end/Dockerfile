@@ -15,7 +15,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Nx emits main.js + a package.json listing runtime deps. `pg` is loaded
-# dynamically by TypeORM, so it isn't detected by the bundler — add it here.
+# dynamically by TypeORM, so it isn't detected by the bundler. We add it here.
 COPY --from=build /app/apps/back-end/dist ./
 RUN npm install --omit=dev && npm install pg@^8 && npm cache clean --force
 

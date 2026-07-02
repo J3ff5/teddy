@@ -1,8 +1,8 @@
-# Teddy — Back-end (API)
+# Back-end da Teddy (API)
 
-API NestJS 11 + TypeORM + PostgreSQL do desafio Teddy: autenticação JWT, CRUD de
-clientes com soft delete, dashboard, contador de acessos, auditoria e
-observabilidade (health, métricas, logs JSON, traces).
+API em NestJS 11 com TypeORM e PostgreSQL. Faz a autenticação por JWT, o CRUD de
+clientes com soft delete, o dashboard, o contador de acessos, a auditoria por
+timestamps e a observabilidade (health, métricas, logs em JSON e traces).
 
 ## Estrutura
 
@@ -10,25 +10,25 @@ observabilidade (health, métricas, logs JSON, traces).
 src/
 ├── main.ts              # bootstrap: pino, ValidationPipe, Swagger, CORS
 ├── app/app.module.ts    # composição dos módulos
-├── config/              # TypeORM options + DataSource (CLI)
+├── config/              # opções do TypeORM e DataSource da CLI
 ├── common/              # transformers (numeric)
 ├── auth/                # login JWT, guard, strategy, seed do admin
 ├── clients/             # CRUD, contador, stats
 ├── health/              # GET /healthz (Terminus)
-├── metrics/             # GET /metrics (Prometheus) + counter custom
-├── observability/       # tracing OpenTelemetry
+├── metrics/             # GET /metrics (Prometheus) e counter próprio
+├── observability/       # tracing com OpenTelemetry
 └── migrations/          # schema inicial
 ```
 
 ## Rodar
 
-Isolado (API + Postgres) via Docker, a partir desta pasta:
+Com Docker (API + Postgres), desta pasta:
 
 ```bash
 docker compose up --build
 ```
 
-Local (precisa de um Postgres acessível):
+Local, com um Postgres disponível:
 
 ```bash
 cp .env.example .env      # ajuste DATABASE_URL
@@ -41,8 +41,8 @@ npx nx serve back-end     # http://localhost:3000
 
 ## Migrations
 
-As migrations rodam automaticamente no boot (`migrationsRun: true`). Para operar
-manualmente (da raiz do repo):
+As migrations rodam sozinhas no boot (`migrationsRun: true`). Para rodar na mão,
+da raiz do repo:
 
 ```bash
 npm run migration:run
@@ -52,8 +52,9 @@ npm run migration:revert
 
 ## Variáveis de ambiente
 
-Veja `.env.example`. Principais: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`,
-`ADMIN_EMAIL`, `ADMIN_PASSWORD`, `OTEL_ENABLED`, `OTEL_EXPORTER_OTLP_ENDPOINT`.
+Estão no `.env.example`. As principais: `DATABASE_URL`, `JWT_SECRET`,
+`JWT_EXPIRES_IN`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `OTEL_ENABLED` e
+`OTEL_EXPORTER_OTLP_ENDPOINT`.
 
 ## Testes
 
