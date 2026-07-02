@@ -1,6 +1,6 @@
 # --- Build stage: compile the NestJS app with Nx ---
 # Build context is the repo root (the whole monorepo is needed for `nx build`).
-FROM node:22-bookworm-slim AS build
+FROM node:24-bookworm-slim AS build
 WORKDIR /app
 
 COPY package*.json ./
@@ -10,7 +10,7 @@ COPY . .
 RUN npx nx build back-end
 
 # --- Runtime stage: install prod deps and run the bundled entrypoint ---
-FROM node:22-bookworm-slim AS runtime
+FROM node:24-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
